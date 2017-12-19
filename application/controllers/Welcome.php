@@ -5,51 +5,41 @@ Class Welcome extends CI_Controller{
     
     function __construct() {
         parent::__construct();
-        // $this->API="https://apps.agungdh.com/api_mahasiswa/";
-        $this->API="http://localhost/ci_api_server/";
+        $this->API="http://localhost/api_catatan/";
     }
     
     function index(){
-        $data['data'] = json_decode($this->curl->simple_get($this->API));
-        $this->load->view('read',$data);
+        if ($this->session->login == true) {
+            $data['id_user'] = $this->session->id;
+            $data['username'] = $this->session->username;
+            $data['password'] = $this->session->password;
+            $data['result'] = json_decode($this->curl->simple_post($this->API."catatan/ambil", $data, array(CURLOPT_BUFFERSIZE => 10))); 
+            $this->load->view('home/main', $data);
+        } else {
+            $this->load->view('login/main');
+        }
     }
     
-    function tambah(){
-    	$this->load->view('tambah');
-    }
+    function aksi_login(){
+        $data = array(
+            'username'      =>  $this->input->post('username'),
+            'password'=>  hash("sha512",$this->input->post('password')));
 
-     function ubah($id){
-     	// $params = array('id'=> $id);
-     	$params['id'] = $id;
+        $result = json_decode($this->curl->simple_post($this->API."login", $data, array(CURLOPT_BUFFERSIZE => 10))); 
 
-        $data['data'] = json_decode($this->curl->simple_get($this->API, $params));
-    	$this->load->view('ubah', $data);
-    }
-
-    function aksi_tambah(){
-            $data = array(
-                'npm'      =>  $this->input->post('npm'),
-                'nama'=>  $this->input->post('nama'));
-
-            $insert =  $this->curl->simple_post($this->API, $data, array(CURLOPT_BUFFERSIZE => 10)); 
-            // var_dump(json_decode($insert));
-            // echo "<br>";
-            // echo "Nama = " . json_decode($insert)->nama;
-            // var_dump($insert);
+        if ($result == null) {
             redirect(base_url());
-    }
-    
-    function aksi_ubah(){
-            $data = array(
-                'npm'      =>  $this->input->post('npm'),
-                'id'       =>  $this->input->post('id'),
-                'nama'=>  $this->input->post('nama'));
-            $update =  $this->curl->simple_put($this->API, $data, array(CURLOPT_BUFFERSIZE => 10)); 
+        } else {
+            $data_user['id'] = $result->id;
+            $data_user['username'] = $result->username;
+            $data_user['password'] = $result->password;
+            $data_user['nama'] = $result->nama;
+            $data_user['level'] = $result->level;
+            $data_user['login'] = true;
+            $this->session->set_userdata($data_user);
+
             redirect(base_url());
+        }
     }
-    
-    function hapus($id){
-            $delete =  $this->curl->simple_delete($this->API, array('id'=>$id), array(CURLOPT_BUFFERSIZE => 10)); 
-            redirect(base_url());
-    }
+
 }

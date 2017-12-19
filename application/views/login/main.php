@@ -6,7 +6,7 @@
 <body>
 	Login
 	<br>
-	<form action="<?php echo base_url("login/aksi"); ?>" method="post">
+	<form action="<?php echo base_url("welcome/aksi_login"); ?>" method="post">
 		Username
 		<input type="text" name="username">
 		<br>
